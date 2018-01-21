@@ -1,10 +1,10 @@
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
- * Copyright (c) Siemens AG, 2013-2016
+ * Copyright (c) OTH Regensburg, 2017
  *
  * Authors:
- *  Jan Kiszka <jan.kiszka@siemens.com>
+ *  Ralf Ramsauer <ralf.ramsauer@oth-regensburg.de>
  *
  * This work is licensed under the terms of the GNU GPL, version 2.  See
  * the COPYING file in the top-level directory.
@@ -36,50 +36,41 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define NULL			((void *)0)
+/* The following definitions are inspired by
+ * hypervisor/arch/arm/include/asm/sysregs.h */
 
-#define NS_PER_USEC		1000UL
-#define NS_PER_MSEC		1000000UL
-#define NS_PER_SEC		1000000000UL
+#define VBAR		SYSREG_32(0, c12, c0, 0)
+#define CNTFRQ_EL0	SYSREG_32(0, c14, c0, 0)
+#define CNTV_TVAL_EL0	SYSREG_32(0, c14, c3, 0)
+#define CNTV_CTL_EL0	SYSREG_32(0, c14, c3, 1)
+#define CNTPCT_EL0	SYSREG_64(0, c14)
+
+#define SYSREG_32(...) 32, __VA_ARGS__
+#define SYSREG_64(...) 64, __VA_ARGS__
+
+#define _arm_write_sysreg(size, ...) arm_write_sysreg_ ## size(__VA_ARGS__)
+#define arm_write_sysreg(...) _arm_write_sysreg(__VA_ARGS__)
+
+#define _arm_read_sysreg(size, ...) arm_read_sysreg_ ## size(__VA_ARGS__)
+#define arm_read_sysreg(...) _arm_read_sysreg(__VA_ARGS__)
 
 #ifndef __ASSEMBLY__
-typedef s8 __s8;
-typedef u8 __u8;
+asm(".arch_extension virt\n");
 
-typedef s16 __s16;
-typedef u16 __u16;
+#define arm_write_sysreg_32(op1, crn, crm, op2, val) \
+	asm volatile ("mcr	p15, "#op1", %0, "#crn", "#crm", "#op2"\n" \
+			: : "r"((u32)(val)))
 
-typedef s32 __s32;
-typedef u32 __u32;
+#define arm_read_sysreg_32(op1, crn, crm, op2, val) \
+	asm volatile ("mrc	p15, "#op1", %0, "#crn", "#crm", "#op2"\n" \
+			: "=r"((u32)(val)))
+#define arm_read_sysreg_64(op1, crm, val) \
+	asm volatile ("mrrc	p15, "#op1", %Q0, %R0, "#crm"\n" \
+			: "=r"((u64)(val)))
 
-typedef s64 __s64;
-typedef u64 __u64;
+#else /* __ASSEMBLY__ */
 
-typedef enum { true = 1, false = 0 } bool;
+#define arm_write_sysreg_32(op1, crn, crm, op2, reg) \
+	mcr	p15, op1, reg, crn, crm, op2
 
-#include <jailhouse/hypercall.h>
-
-#define comm_region	((struct jailhouse_comm_region *)COMM_REGION_BASE)
-
-void printk(const char *fmt, ...);
-
-void *memset(void *s, int c, unsigned long n);
-void *memcpy(void *d, const void *s, unsigned long n);
-unsigned long strlen(const char *s);
-int strncmp(const char *s1, const char *s2, unsigned long n);
-int strcmp(const char *s1, const char *s2);
-
-const char *cmdline_parse_str(const char *param, char *value_buffer,
-			      unsigned long buffer_size,
-			      const char *default_value);
-long long cmdline_parse_int(const char *param, long long default_value);
-bool cmdline_parse_bool(const char *param);
-
-#define CMDLINE_BUFFER(size) \
-	const char cmdline[size] __attribute__((section(".cmdline")))
-
-extern const char cmdline[];
-
-void inmate_main(void);
-
-#endif /* !__ASSEMBLY__ */
+#endif /* __ASSEMBLY__ */
