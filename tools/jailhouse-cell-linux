@@ -690,11 +690,6 @@ class X86ZeroPage:
         if initrd:
             kernel_size = os.fstat(kernel.fileno()).st_size
             ramdisk_size = os.fstat(initrd.fileno()).st_size
-<<<<<<< HEAD
-            # same as arm, magic factor 10 works generally fine
-            ramdisk_load_addr = page_align(self.kernel_load_addr +
-                                           10 * kernel_size)
-=======
 
             kernel.seek(prot_image_offs + self.setup_header.payload_offset)
             payload_magic = bytearray(kernel.read(4))
@@ -719,7 +714,6 @@ class X86ZeroPage:
 
             ramdisk_load_addr = page_align(self.kernel_load_addr +
                                            decompression_space)
->>>>>>> siemens-next
 
         self.setup_header.set_ramdisk_image(ramdisk_load_addr)
         self.setup_header.set_ramdisk_size(ramdisk_size)
@@ -779,21 +773,14 @@ class JailhouseCell:
 
 
 def x86_gen_setup_data(config):
-<<<<<<< HEAD
-=======
     SETUP_TYPE_JAILHOUSE = 6
->>>>>>> siemens-next
     MAX_CPUS = 255
     SETUP_DATA_VERSION = 1
     standard_ioapic = 0
     for irqchip in config.irqchips:
         if irqchip.is_standard():
             standard_ioapic = 1
-<<<<<<< HEAD
-    return struct.pack('8x4sIHH12xB', b'JLHS', 17 + MAX_CPUS,
-=======
     return struct.pack('8xIIHH12x8xB', SETUP_TYPE_JAILHOUSE, 25 + MAX_CPUS,
->>>>>>> siemens-next
                        SETUP_DATA_VERSION, SETUP_DATA_VERSION,
                        standard_ioapic) + \
         bytearray(MAX_CPUS)
