@@ -36,8 +36,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define JAILHOUSE_BORROW_ROOT_PT	1
-
 /*
  * As this is never called on a CPU without VM extensions,
  * we assume that where VMCALL isn't available, VMMCALL is.
@@ -99,10 +97,17 @@ extern bool jailhouse_use_vmcall;
 struct jailhouse_comm_region {
 	COMM_REGION_GENERIC_HEADER;
 
+	/** Base address of PCI memory mapped config (x86-specific). */
+	__u64 pci_mmconfig_base;
 	/** I/O port address of the PM timer (x86-specific). */
 	__u16 pm_timer_address;
 	/** Number of CPUs available to the cell (x86-specific). */
 	__u16 num_cpus;
+	/** Calibrated TSC frequency in kHz (x86-specific). */
+	__u32 tsc_khz;
+	/** Calibrated APIC timer frequency in kHz or 0 if TSC deadline timer
+	 * is available (x86-specific). */
+	__u32 apic_khz;
 };
 
 /**
