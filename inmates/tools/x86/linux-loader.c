@@ -32,11 +32,8 @@ struct setup_data {
 	u16	pm_timer_address;
 	u16	num_cpus;
 	u64	pci_mmconfig_base;
-<<<<<<< HEAD
-=======
 	u32	tsc_khz;
 	u32	apic_khz;
->>>>>>> siemens-next
 	u8	standard_ioapic;
 	u8	cpu_ids[SMP_MAX_CPUS];
 } __attribute__((packed));
